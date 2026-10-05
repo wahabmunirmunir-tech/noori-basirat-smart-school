@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
   runApp(const NooriBaseeratApp());
 }
 
 class NooriBaseeratApp extends StatelessWidget {
   const NooriBaseeratApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -18,7 +21,6 @@ class NooriBaseeratApp extends StatelessWidget {
   }
 }
 
-// 1۔ زبانوں والا صفحہ
 class LanguageScreen extends StatelessWidget {
   const LanguageScreen({super.key});
   final List<Map<String, String>> langs = const [
@@ -35,7 +37,6 @@ class LanguageScreen extends StatelessWidget {
     {'code': 'fa', 'name': 'فارسی'},
     {'code': 'es', 'name': 'Español'},
   ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,11 +47,7 @@ class LanguageScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFD4AF37), width: 2),
-                borderRadius: BorderRadius.circular(30),
-                color: Colors.black54,
-              ),
+              decoration: BoxDecoration(border: Border.all(color: const Color(0xFFD4AF37), width: 2), borderRadius: BorderRadius.circular(30), color: Colors.black54),
               child: const Text('نُورِی بَصِیرَت 👁️', style: TextStyle(color: Color(0xFFFFD700), fontSize: 26, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 10),
@@ -63,14 +60,8 @@ class LanguageScreen extends StatelessWidget {
                 itemCount: langs.length,
                 itemBuilder: (context, i) {
                   return ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0a3d2e),
-                      side: const BorderSide(color: Color(0xFFD4AF37)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    onPressed: () {
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainScreen(selectedLang: langs[i]['name']!)));
-                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0a3d2e), side: const BorderSide(color: Color(0xFFD4AF37)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    onPressed: () { Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainScreen(selectedLang: langs[i]['name']!))); },
                     child: Text('${i + 1}۔ ${langs[i]['name']}', style: const TextStyle(color: Color(0xFFF5E6A8), fontWeight: FontWeight.bold)),
                   );
                 },
@@ -81,13 +72,11 @@ class LanguageScreen extends StatelessWidget {
           ],
         ),
       ),
-      // نیچے حلال بینر - کمائی والا
-      bottomSheet: _halalBanner(),
+      bottomSheet: const HalalBannerAd(),
     );
   }
 }
 
-// 2۔ مین سکرین
 class MainScreen extends StatefulWidget {
   final String selectedLang;
   const MainScreen({super.key, required this.selectedLang});
@@ -96,76 +85,56 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int lessonsRead = 0;
+  final String bannerId = 'ca-app-pub-6967191660339063/1424495325';
+  final String boxId = 'ca-app-pub-6967191660339063/3603827158';
+  final String paraId = 'ca-app-pub-6967191660339063/7239928785';
+  final String appOpenId = 'ca-app-pub-6967191660339063/7048357094';
+
+  InterstitialAd? _boxAd;
+  InterstitialAd? _paraAd;
+  int paraPageCount = 0;
   int tapCount = 0;
   DateTime lastTap = DateTime.now();
 
-  void checkAd() {
-    lessonsRead++;
-    if (lessonsRead >= 2) {
-      _showInterstitialAd();
-      lessonsRead = 0;
-    }
+  @override
+  void initState() {
+    super.initState();
+    _loadBoxAd();
+    _loadParaAd();
   }
 
-  void _showInterstitialAd() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: const Text('🌙 حلال اسلامی اشتہار', style: TextStyle(color: Color(0xFF0A2F1F))),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(border: Border.all(color: const Color(0xFFD4AF37), width: 2), borderRadius: BorderRadius.circular(10), color: const Color(0xFFfdf6e3)),
-              child: const Column(children: [
-                Text('الحمدللہ حلال سفر سروس', style: TextStyle(fontWeight: FontWeight.bold)),
-                Text('عمرہ، حج، ویزہ، ٹکٹ - مکمل رہنمائی', style: TextStyle(fontSize: 13)),
-                SizedBox(height: 5),
-                Text('AdMob ID: ca-app-pub-XXXXXXXXXXXXXXXX - صرف اسلامی', style: TextStyle(fontSize: 10, color: Colors.green)),
-              ]),
-            ),
-          ],
-        ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('❌ بند کریں'))],
-      ),
-    );
+  void _loadBoxAd() {
+    InterstitialAd.load(adUnitId: boxId, request: const AdRequest(), adLoadCallback: InterstitialAdLoadCallback(onAdLoaded: (ad) => _boxAd = ad, onAdFailedToLoad: (e) => _boxAd = null));
+  }
+
+  void _loadParaAd() {
+    InterstitialAd.load(adUnitId: paraId, request: const AdRequest(), adLoadCallback: InterstitialAdLoadCallback(onAdLoaded: (ad) => _paraAd = ad, onAdFailedToLoad: (e) => _paraAd = null));
+  }
+
+  void _showBoxAd() {
+    if (_boxAd!= null) { _boxAd!.show(); _boxAd!.fullScreenContentCallback = FullScreenContentCallback(onAdDismissedFullScreenContent: (ad) { ad.dispose(); _loadBoxAd(); }); }
+  }
+
+  void _showParaAdWithDelay() {
+    paraPageCount++;
+    if (paraPageCount % 2 == 0) {
+      Future.delayed(const Duration(seconds: 3), () {
+        if (_paraAd!= null) { _paraAd!.show(); _paraAd!.fullScreenContentCallback = FullScreenContentCallback(onAdDismissedFullScreenContent: (ad) { ad.dispose(); _loadParaAd(); }); }
+      });
+    }
   }
 
   void _ownerMode() {
     final now = DateTime.now();
     if (now.difference(lastTap).inSeconds > 2) tapCount = 0;
-    lastTap = now;
-    tapCount++;
+    lastTap = now; tapCount++;
     if (tapCount >= 5) {
       tapCount = 0;
-      showDialog(
-        context: context,
-        builder: (_) {
+      showDialog(context: context, builder: (_) {
           String name = '', father = '';
-          return AlertDialog(
-            title: const Text('مالک کی تصدیق'),
-            content: Column(mainAxisSize: MainAxisSize.min, children: [
-              TextField(onChanged: (v) => name = v, decoration: const InputDecoration(labelText: 'نام؟')),
-              TextField(onChanged: (v) => father = v, decoration: const InputDecoration(labelText: 'والد کا نام؟')),
-            ]),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  if (name.contains('وہاب') && father.contains('بخت')) {
-                    Navigator.pop(context);
-                    showDialog(context: context, builder: (_) => const AlertDialog(title: Text('مالک موڈ کھل گیا'), content: Text('کمائی نمبر (خفیہ): 03434378764\nعوام واٹس ایپ: 03209548869\n\nAdMob Banner ID: ca-app-pub-3940256099942544/6300978111\nInterstitial ID: ca-app-pub-3940256099942544/1033173712\n(یہ ٹیسٹ ID ہیں، اپنی اصلی ID سے بدلیں)')));
-                  }
-                },
-                child: const Text('تصدیق'),
-              )
-            ],
-          );
-        },
-      );
+          return AlertDialog(title: const Text('مالک کی تصدیق'), content: Column(mainAxisSize: MainAxisSize.min, children: [TextField(onChanged: (v) => name = v, decoration: const InputDecoration(labelText: 'نام؟')), TextField(onChanged: (v) => father = v, decoration: const InputDecoration(labelText: 'والد کا نام؟'))]),
+            actions: [ElevatedButton(onPressed: () { if (name.contains('وہاب') && father.contains('بخت')) { Navigator.pop(context); showDialog(context: context, builder: (_) => AlertDialog(title: const Text('مالک موڈ کھل گیا'), content: Text('خفیہ: 03434378764\nعوام: 03209548869\n\nBanner: $bannerId\nBox: $boxId\nPara: $paraId\nAppOpen: $appOpenId'))); } }, child: const Text('تصدیق'))]);
+        });
     }
   }
 
@@ -176,13 +145,7 @@ class _MainScreenState extends State<MainScreen> {
       backgroundColor: const Color(0xFF021a12),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(100),
-        child: GestureDetector(
-          onTap: _ownerMode,
-          child: Container(
-            decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFD4AF37), width: 3)), image: DecorationImage(image: NetworkImage('https://images.unsplash.com/photo-1585664811087-47f65abbad64?q=80&w=900'), fit: BoxFit.cover)),
-            child: Center(child: Container(margin: const EdgeInsets.only(top: 25), padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15), decoration: BoxDecoration(color: Colors.black87, border: Border.all(color: const Color(0xFFD4AF37), width: 2.5), borderRadius: BorderRadius.circular(35)), child: const Text('نُورِی بَصِیرَت', style: TextStyle(color: Color(0xFFFFD700), fontSize: 24, fontWeight: FontWeight.bold)))),
-          ),
-        ),
+        child: GestureDetector(onTap: _ownerMode, child: Container(decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFD4AF37), width: 3)), image: DecorationImage(image: NetworkImage('https://images.unsplash.com/photo-1585664811087-47f65abbad64?q=80&w=900'), fit: BoxFit.cover)), child: Center(child: Container(margin: const EdgeInsets.only(top: 25), padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15), decoration: BoxDecoration(color: Colors.black87, border: Border.all(color: const Color(0xFFD4AF37), width: 2.5), borderRadius: BorderRadius.circular(35)), child: const Text('نُورِی بَصِیرَت', style: TextStyle(color: Color(0xFFFFD700), fontSize: 24, fontWeight: FontWeight.bold)))))),
       ),
       body: Column(
         children: [
@@ -193,15 +156,20 @@ class _MainScreenState extends State<MainScreen> {
               itemCount: titles.length,
               itemBuilder: (context, i) {
                 bool isQuran = i == 9;
-                return GestureDetector(
-                  onTap: checkAd,
+                return InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: () {
+                    _showBoxAd();
+                    if (isQuran) { Navigator.push(context, MaterialPageRoute(builder: (_) => QuranParaScreen(selectedLang: widget.selectedLang, onPageChanged: _showParaAdWithDelay))); }
+                    else { Navigator.push(context, MaterialPageRoute(builder: (_) => LessonDetailScreen(title: titles[i]))); }
+                  },
                   child: Container(
-                    decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0a3d2e), Color(0xFF06291f)]), border: Border.all(color: i == 9? const Color(0xFFFFD700) : const Color(0xFFD4AF37), width: isQuran? 2.5 : 1.5), borderRadius: BorderRadius.circular(18)),
+                    decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0a3d2e), Color(0xFF06291f)]), border: Border.all(color: isQuran? const Color(0xFFFFD700) : const Color(0xFFD4AF37), width: isQuran? 2.5 : 1.5), borderRadius: BorderRadius.circular(18)),
                     padding: const EdgeInsets.all(10),
                     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                       Text(titles[i], textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFFF5E6A8), fontSize: 17, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
-                      Wrap(alignment: WrapAlignment.center, children: [Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5), decoration: BoxDecoration(color: const Color(0xFFD4AF37), borderRadius: BorderRadius.circular(14)), child: Text(isQuran? 'پڑھیے، سنیے، دیکھیے' : 'پڑھیے', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF021a12))))]),
+                      Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5), decoration: BoxDecoration(color: const Color(0xFFD4AF37), borderRadius: BorderRadius.circular(14)), child: Text(isQuran? 'پڑھیے، سنیے، دیکھیے' : 'پڑھیے', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF021a12)))),
                       if (isQuran) Text('ترجمہ: ${widget.selectedLang}', style: const TextStyle(color: Color(0xFFF5E6A8), fontSize: 11)),
                     ]),
                   ),
@@ -209,38 +177,61 @@ class _MainScreenState extends State<MainScreen> {
               },
             ),
           ),
-          Container(
-            color: const Color(0xFF021a12),
-            padding: const EdgeInsets.all(15),
-            child: Column(children: [
-              Text('مالک: وہاب منیر - ${widget.selectedLang}', style: const TextStyle(color: Color(0xFFD4AF37))),
-              const SizedBox(height: 10),
-              ElevatedButton.icon(style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF25D366), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))), onPressed: () {}, icon: const Text('📱'), label: const Text('واٹس ایپ پر رابطہ کریں - 03209548869', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-              const SizedBox(height: 8),
-              Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: const Color(0x1AD4AF37), border: Border.all(color: const Color(0xFFD4AF37)), borderRadius: BorderRadius.circular(10)), child: const Text('📢 بیرون ملک، ویزہ، عمرہ، حج رہنمائی کے لیے رابطہ کریں۔', style: TextStyle(color: Color(0xFFF5E6A8), fontSize: 12))),
-            ]),
-          ),
-          _halalBanner(),
-          const SizedBox(height: 5),
+          Container(color: const Color(0xFF021a12), padding: const EdgeInsets.all(15), child: Column(children: [Text('مالک: وہاب منیر - ${widget.selectedLang}', style: const TextStyle(color: Color(0xFFD4AF37))), const SizedBox(height: 10), ElevatedButton.icon(style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF25D366), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))), onPressed: () {}, icon: const Text('📱'), label: const Text('واٹس ایپ پر رابطہ کریں - 03209548869', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))])),
+          const HalalBannerAd(),
         ],
       ),
     );
   }
 }
 
-Widget _halalBanner() {
-  return Container(
-    height: 65,
-    color: Colors.black,
-    padding: const EdgeInsets.all(5),
-    child: Container(
-      decoration: BoxDecoration(border: Border.all(color: const Color(0xFFD4AF37), width: 1.5), borderRadius: BorderRadius.circular(10), color: const Color(0xFF0A2F1F)),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Row(children: [
-        Container(width: 30, height: 30, decoration: const BoxDecoration(color: Color(0xFFD4AF37), shape: BoxShape.circle), child: const Center(child: Text('حلال', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)))),
-        const SizedBox(width: 8),
-        const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [Text('📢 عمرہ، حج، ویزہ، ٹریول - حلال سروس', style: TextStyle(color: Color(0xFFFFD700), fontSize: 12, fontWeight: FontWeight.bold)), Text('واٹس ایپ: 03209548869 - صرف اسلامی اشتہار', style: TextStyle(color: Colors.white, fontSize: 10))])),
-      ]),
-    ),
-  );
+class HalalBannerAd extends StatefulWidget {
+  const HalalBannerAd({super.key});
+  @override
+  State<HalalBannerAd> createState() => _HalalBannerAdState();
+}
+
+class _HalalBannerAdState extends State<HalalBannerAd> {
+  BannerAd? _bannerAd;
+  final String bannerId = 'ca-app-pub-6967191660339063/1424495325';
+  @override
+  void initState() { super.initState(); _bannerAd = BannerAd(adUnitId: bannerId, size: AdSize.banner, request: const AdRequest(), listener: BannerAdListener(onAdLoaded: (ad) => setState(() {}), onAdFailedToLoad: (ad, err) => ad.dispose()))..load(); }
+  @override
+  void dispose() { _bannerAd?.dispose(); super.dispose(); }
+  @override
+  Widget build(BuildContext context) {
+    if (_bannerAd == null) { return Container(height: 65, color: Colors.black, child: const Center(child: Text('حلال اشتہار لوڈ ہو رہا ہے...', style: TextStyle(color: Colors.white, fontSize: 10)))); }
+    return Container(height: 65, color: Colors.black, alignment: Alignment.center, child: AdWidget(ad: _bannerAd!));
+  }
+}
+
+class LessonDetailScreen extends StatelessWidget {
+  final String title;
+  const LessonDetailScreen({super.key, required this.title});
+  @override
+  Widget build(BuildContext context) { return Scaffold(appBar: AppBar(title: Text(title), backgroundColor: const Color(0xFF0a3d2e)), body: Center(child: Text('$title کا مواد', style: const TextStyle(fontSize: 22)))); }
+}
+
+class QuranParaScreen extends StatefulWidget {
+  final String selectedLang;
+  final VoidCallback onPageChanged;
+  const QuranParaScreen({super.key, required this.selectedLang, required this.onPageChanged});
+  @override
+  State<QuranParaScreen> createState() => _QuranParaScreenState();
+}
+
+class _QuranParaScreenState extends State<QuranParaScreen> {
+  final PageController _controller = PageController();
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('مکمل قرآن - ${widget.selectedLang}'), backgroundColor: const Color(0xFF0a3d2e)),
+      body: PageView.builder(
+        controller: _controller,
+        onPageChanged: (index) { widget.onPageChanged(); },
+        itemCount: 30,
+        itemBuilder: (context, index) { return Center(child: Text('پارہ ${index + 1}', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold))); },
+      ),
+    );
+  }
 }
