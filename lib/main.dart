@@ -158,12 +158,18 @@ class _MainScreenState extends State<MainScreen> {
                 bool isQuran = i == 9;
                 return InkWell(
                   borderRadius: BorderRadius.circular(18),
-                  onTap: () {
+                  onTap: () async {
+                    if (isQuran) {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => QuranParaScreen(selectedLang: widget.selectedLang, onPageChanged: _showParaAdWithDelay)));
+                    } else {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => LessonDetailScreen(title: titles[i])));
+                    }
+                    await Future.delayed(const Duration(seconds: 2));
                     _showBoxAd();
-                    if (isQuran) { Navigator.push(context, MaterialPageRoute(builder: (_) => QuranParaScreen(selectedLang: widget.selectedLang, onPageChanged: _showParaAdWithDelay))); }
-                    else { Navigator.push(context, MaterialPageRoute(builder: (_) => LessonDetailScreen(title: titles[i]))); }
                   },
                   child: Container(
+                    width: double.infinity,
+                    height: double.infinity,
                     decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0a3d2e), Color(0xFF06291f)]), border: Border.all(color: isQuran? const Color(0xFFFFD700) : const Color(0xFFD4AF37), width: isQuran? 2.5 : 1.5), borderRadius: BorderRadius.circular(18)),
                     padding: const EdgeInsets.all(10),
                     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
