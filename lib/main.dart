@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
-import 'dart:math';
 
 // ============ زبان ============
 class AppLang extends ChangeNotifier {
-  String _code='ur'; String get code=>_code;
+  String _code='en'; String get code=>_code;
   Map<String,Map<String,String>> t={
     'ur':{'title':'Holy Quran','resume':'Resume','juz':'Juz Index','surah':'Surah Index','goto':'Go to page #','book':'Bookmarks','set':'Settings','dev':'Developed by: FanzeTech'},
     'en':{'title':'Holy Quran','resume':'Resume','juz':'Juz Index','surah':'Surah Index','goto':'Go to page #','book':'Bookmarks','set':'Settings','dev':'Developed by: FanzeTech'},
@@ -20,46 +19,54 @@ class AppLang extends ChangeNotifier {
 // ============ ایڈز ============
 class AdM {
   static InterstitialAd? ad;
-  static void load(){ InterstitialAd.load(adUnitId:'ca-app-pub-6967191660339063/7048357094', request:AdRequest(), adLoadCallback:InterstitialAdLoadCallback(onAdLoaded:(a)=>ad=a, onAdFailedToLoad:(e){})); }
-  static void show(){ if(ad!=null){ ad!.show(); load(); } }
+  static void load(){
+    InterstitialAd.load(
+      adUnitId:'ca-app-pub-6967191660339063/7048357094',
+      request:const AdRequest(),
+      adLoadCallback:InterstitialAdLoadCallback(
+        onAdLoaded:(a)=>ad=a,
+        onAdFailedToLoad:(e){ ad=null; }
+      )
+    );
+  }
+  static void show(){ if(ad!=null){ ad!.show(); ad=null; load(); } }
 }
 
-void main(){ WidgetsFlutterBinding.ensureInitialized(); MobileAds.instance.initialize(); AdM.load(); runApp(ChangeNotifierProvider(create:(_)=>AppLang(), child: MyApp())); }
+void main(){
+  WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
+  AdM.load();
+  runApp(ChangeNotifierProvider(create:(_)=>AppLang(), child: MyApp()));
+}
 class MyApp extends StatelessWidget { @override Widget build(BuildContext context){ return MaterialApp(debugShowCheckedModeBanner:false, home:Splash()); } }
 
 // ============ SPLASH - ویڈیو جیسا ============
 class Splash extends StatefulWidget { @override _SplashState createState()=>_SplashState(); }
 class _SplashState extends State<Splash> {
-  @override void initState(){ super.initState(); Future.delayed(Duration(seconds:2),(){ Navigator.pushReplacement(context, MaterialPageRoute(builder:(_)=>HomeMenu())); }); }
+  @override void initState(){ super.initState(); Future.delayed(const Duration(seconds:2),(){ if(mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder:(_)=>HomeMenu())); }); }
   @override Widget build(BuildContext context){
     return Scaffold(
-      backgroundColor: Color(0xFF0A3D1F),
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(image: NetworkImage('https://i.imgur.com/8QJ4p5a.png'), fit:BoxFit.cover, opacity:0.3),
-        ),
-        child: Center(
-          child: Container(
-            margin: EdgeInsets.all(18),
-            decoration: BoxDecoration(border: Border.all(color: Color(0xFFC5B358), width:2), borderRadius: BorderRadius.circular(8)),
-            child: Stack(
-              children:[
-                Container(color: Color(0xFF0A3D1F)),
-                // اوپر نیچے بارڈر ڈیزائن
-                Positioned.fill(child: CustomPaint(painter: BorderPainter())),
-                Center(
-                  child: Column(mainAxisAlignment:MainAxisAlignment.center, children:[
-                    Container(
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(shape:BoxShape.circle, border:Border.all(color:Color(0xFFC5B358))),
-                      child: Text('القرآن الكريم', style:TextStyle(fontSize:42, color:Color(0xFFD4AF37), fontWeight:FontWeight.bold, fontFamily:'Noto Nastaliq'), textAlign:TextAlign.center),
-                    ),
-                    SizedBox(height:30),
-                    Text('Developed by: FanzeTech', style:TextStyle(color:Colors.white70, fontSize:12)),
-                  ]),
-                ),
-              ],
-            ),
+      backgroundColor: const Color(0xFF0A3D1F),
+      body: Center(
+        child: Container(
+          margin: const EdgeInsets.all(18),
+          decoration: BoxDecoration(border: Border.all(color: const Color(0xFFC5B358), width:2), borderRadius: BorderRadius.circular(8)),
+          child: Stack(
+            children:[
+              Container(color: const Color(0xFF0A3D1F)),
+              Positioned.fill(child: CustomPaint(painter: BorderPainter())),
+              Center(
+                child: Column(mainAxisAlignment:MainAxisAlignment.center, children:[
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(shape:BoxShape.circle, border:Border.all(color:const Color(0xFFC5B358))),
+                    child: const Text('القرآن الكريم', style:TextStyle(fontSize:42, color:Color(0xFFD4AF37), fontWeight:FontWeight.bold), textAlign:TextAlign.center),
+                  ),
+                  const SizedBox(height:30),
+                  const Text('Developed by: FanzeTech', style:TextStyle(color:Colors.white70, fontSize:12)),
+                ]),
+              ),
+            ],
           ),
         ),
       ),
@@ -68,9 +75,8 @@ class _SplashState extends State<Splash> {
 }
 class BorderPainter extends CustomPainter {
   @override void paint(Canvas c, Size s){
-    var p=Paint()..color=Color(0xFFC5B358)..style=PaintingStyle.stroke..strokeWidth=1.2;
-    // سادہ اسلامی بارڈر
-    c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(8,8,s.width-16,s.height-16), Radius.circular(4)), p);
+    var p=Paint()..color=const Color(0xFFC5B358)..style=PaintingStyle.stroke..strokeWidth=1.2;
+    c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(8,8,s.width-16,s.height-16), const Radius.circular(4)), p);
   }
   @override bool shouldRepaint(covariant CustomPainter oldDelegate)=>false;
 }
@@ -79,7 +85,16 @@ class BorderPainter extends CustomPainter {
 class HomeMenu extends StatefulWidget { @override _HomeMenuState createState()=>_HomeMenuState(); }
 class _HomeMenuState extends State<HomeMenu> {
   BannerAd? banner;
-  @override void initState(){ super.initState(); banner=BannerAd(adUnitId:'ca-app-pub-6967191660339063/7048357094', size:AdSize.banner, request:AdRequest(), listener:BannerAdListener(onAdLoaded:(ad){setState((){});}))..load(); }
+  @override void initState(){
+    super.initState();
+    banner=BannerAd(
+      adUnitId:'ca-app-pub-6967191660339063/7048357094',
+      size:AdSize.banner,
+      request:const AdRequest(),
+      listener:BannerAdListener(onAdLoaded:(ad){ setState((){}); })
+    )..load();
+  }
+  @override void dispose(){ banner?.dispose(); super.dispose(); }
   @override Widget build(BuildContext context){
     final lang=Provider.of<AppLang>(context);
     List<Map<String,String>> btns=[
@@ -92,20 +107,19 @@ class _HomeMenuState extends State<HomeMenu> {
     ];
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(backgroundColor: Color(0xFF0B5D2A), title:Text(lang.tr('title')), centerTitle:true),
-      bottomNavigationBar: banner!=null? Container(height:50, child:AdWidget(ad:banner!)):null,
+      appBar: AppBar(backgroundColor: const Color(0xFF0B5D2A), title:Text(lang.tr('title')), centerTitle:true),
+      bottomNavigationBar: banner!=null? SizedBox(height:50, child:AdWidget(ad:banner!)):null,
       body: Container(
-        margin: EdgeInsets.all(10),
-        decoration: BoxDecoration(border: Border.all(color: Color(0xFF0B5D2A), width:1.5), borderRadius: BorderRadius.circular(6)),
+        margin: const EdgeInsets.all(10),
+        decoration: BoxDecoration(border: Border.all(color: const Color(0xFF0B5D2A), width:1.5), borderRadius: BorderRadius.circular(6)),
         child: Column(
           children:[
-            // اوپر والا ڈیزائن
-            Container(height:30, decoration:BoxDecoration(color:Color(0xFF0B5D2A).withOpacity(0.1)), child:Center(child:Icon(Icons.star, color:Color(0xFF0B5D2A), size:14))),
+            Container(height:30, decoration:BoxDecoration(color:const Color(0xFF0B5D2A).withOpacity(0.1)), child:const Center(child:Icon(Icons.star, color:Color(0xFF0B5D2A), size:14))),
             Expanded(
               child: ListView.separated(
-                padding: EdgeInsets.all(12),
+                padding: const EdgeInsets.all(12),
                 itemCount: btns.length,
-                separatorBuilder: (_,__ )=> SizedBox(height:10),
+                separatorBuilder: (_,__ )=> const SizedBox(height:10),
                 itemBuilder: (c,i){
                   return GestureDetector(
                     onTap:(){
@@ -116,14 +130,14 @@ class _HomeMenuState extends State<HomeMenu> {
                     },
                     child: Container(
                       height:55,
-                      decoration: BoxDecoration(color: Color(0xFF0B3D1F), borderRadius: BorderRadius.circular(4), border: Border.all(color: Color(0xFFC5B358))),
-                      child: Center(child: Text(btns[i]['t']!, style:TextStyle(color:Colors.white, fontWeight:FontWeight.bold))),
+                      decoration: BoxDecoration(color: const Color(0xFF0B3D1F), borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFC5B358))),
+                      child: Center(child: Text(btns[i]['t']!, style:const TextStyle(color:Colors.white, fontWeight:FontWeight.bold))),
                     ),
                   );
                 },
               ),
             ),
-            Container(height:30, child:Center(child:Text('Developed by: FanzeTech', style:TextStyle(fontSize:10, color:Colors.grey)))),
+            const SizedBox(height:10, child:Center(child:Text('Developed by: FanzeTech', style:TextStyle(fontSize:10, color:Colors.grey)))),
           ],
         ),
       ),
@@ -131,7 +145,7 @@ class _HomeMenuState extends State<HomeMenu> {
   }
 }
 
-// ============ SURAH INDEX - ویڈیو جیسا ============
+// ============ SURAH INDEX ============
 class SurahIndex extends StatelessWidget {
   final List<Map<String,String>> surahs=[
     {"no":"1","en":"Al-Fatihah","ar":"سورة الفاتحة","page":"2"},
@@ -149,22 +163,22 @@ class SurahIndex extends StatelessWidget {
   ];
   @override Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(backgroundColor: Color(0xFF0B5D2A), title:Text('Surah Index')),
+      appBar: AppBar(backgroundColor: const Color(0xFF0B5D2A), title:const Text('Surah Index')),
       body: Container(
-        margin: EdgeInsets.all(8),
-        decoration: BoxDecoration(border: Border.all(color:Color(0xFF0B5D2A)), borderRadius:BorderRadius.circular(8)),
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(border: Border.all(color:const Color(0xFF0B5D2A)), borderRadius:BorderRadius.circular(8)),
         child: ListView.builder(
           itemCount: 114,
           itemBuilder: (c,i){
             var s = i<surahs.length? surahs[i] : {"no":"${i+1}","en":"Surah ${i+1}","ar":"سورة","page":"${200+i}"};
             return Container(
-              margin: EdgeInsets.symmetric(horizontal:6, vertical:3),
-              decoration: BoxDecoration(color: Color(0xFF0B3D1F), borderRadius: BorderRadius.circular(3)),
+              margin: const EdgeInsets.symmetric(horizontal:6, vertical:3),
+              decoration: BoxDecoration(color: const Color(0xFF0B3D1F), borderRadius: BorderRadius.circular(3)),
               child: ListTile(
                 onTap:(){ AdM.show(); Navigator.push(c, MaterialPageRoute(builder:(_)=>QuranReader(startPage: int.parse(s['page']!)))); },
-                title: Text('${s['no']} - ${s['en']}', style:TextStyle(color:Colors.white, fontSize:13)),
-                subtitle: Text('Page no. ${s['page']}', style:TextStyle(color:Colors.white70, fontSize:10)),
-                trailing: Text(s['ar']!, style:TextStyle(color:Colors.white, fontSize:14)),
+                title: Text('${s['no']} - ${s['en']}', style:const TextStyle(color:Colors.white, fontSize:13)),
+                subtitle: Text('Page no. ${s['page']}', style:const TextStyle(color:Colors.white70, fontSize:10)),
+                trailing: Text(s['ar']!, style:const TextStyle(color:Colors.white, fontSize:14)),
               ),
             );
           },
@@ -195,22 +209,22 @@ class JuzIndex extends StatelessWidget {
   ];
   @override Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(backgroundColor: Color(0xFF0B5D2A), title:Text('Juz Index')),
+      appBar: AppBar(backgroundColor: const Color(0xFF0B5D2A), title:const Text('Juz Index')),
       body: Container(
-        margin: EdgeInsets.all(8),
-        decoration: BoxDecoration(border: Border.all(color:Color(0xFF0B5D2A)), borderRadius:BorderRadius.circular(8)),
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(border: Border.all(color:const Color(0xFF0B5D2A)), borderRadius:BorderRadius.circular(8)),
         child: ListView.builder(
           itemCount: 30,
           itemBuilder: (c,i){
             var j = i<juz.length? juz[i] : {"no":"${i+1}","en":"Juz ${i+1}","ar":"جزء","page":"${(i+1)*20}"};
             return Container(
-              margin: EdgeInsets.symmetric(horizontal:6, vertical:3),
-              decoration: BoxDecoration(color: Color(0xFF0B3D1F), borderRadius: BorderRadius.circular(3)),
+              margin: const EdgeInsets.symmetric(horizontal:6, vertical:3),
+              decoration: BoxDecoration(color: const Color(0xFF0B3D1F), borderRadius: BorderRadius.circular(3)),
               child: ListTile(
                 onTap:(){ AdM.show(); Navigator.push(c, MaterialPageRoute(builder:(_)=>QuranReader(startPage: int.parse(j['page']!)))); },
-                title: Text('${j['no']} - ${j['en']}', style:TextStyle(color:Colors.white, fontSize:13)),
-                subtitle: Text('Page no. ${j['page']}', style:TextStyle(color:Colors.white70, fontSize:10)),
-                trailing: Text(j['ar']!, style:TextStyle(color:Colors.white, fontSize:14)),
+                title: Text('${j['no']} - ${j['en']}', style:const TextStyle(color:Colors.white, fontSize:13)),
+                subtitle: Text('Page no. ${j['page']}', style:const TextStyle(color:Colors.white70, fontSize:10)),
+                trailing: Text(j['ar']!, style:const TextStyle(color:Colors.white, fontSize:14)),
               ),
             );
           },
@@ -220,11 +234,11 @@ class JuzIndex extends StatelessWidget {
   }
 }
 
-// ============ QURAN READER - ویڈیو جیسا صفحہ پلٹنا ============
+// ============ QURAN READER ============
 class QuranReader extends StatefulWidget { final int startPage; QuranReader({required this.startPage}); @override _QuranReaderState createState()=> _QuranReaderState(); }
 class _QuranReaderState extends State<QuranReader> {
   late PageController pc;
-  @override void initState(){ super.initState(); pc=PageController(initialPage: widget.startPage); _save(); }
+  @override void initState(){ super.initState(); pc=PageController(initialPage: widget.startPage.clamp(0, 603)); _save(); }
   void _save() async { final p=await SharedPreferences.getInstance(); await p.setInt('last_page', widget.startPage); }
   @override Widget build(BuildContext context){
     return Scaffold(
@@ -236,12 +250,9 @@ class _QuranReaderState extends State<QuranReader> {
         itemBuilder: (c, idx){
           return Stack(
             children:[
-              // قرآن کا صفحہ - سفید
-              Container(color: Colors.white, child: Center(child: Column(mainAxisAlignment:MainAxisAlignment.center, children:[Text('صفحہ ${idx+1}', style:TextStyle(fontSize:10, color:Colors.grey)), SizedBox(height:20), Text('بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ\n\nالْحَمْدُ لِلّٰهِ رَبِّ الْعَالَمِيْنَ\nالرَّحْمٰنِ الرَّحِيْمِ\nمَالِكِ يَوْمِ الدِّيْنِ', style:TextStyle(fontSize:22, height:2), textAlign:TextAlign.center)]))),
-              // اسلامی بارڈر
+              Container(color: Colors.white, child: Center(child: Column(mainAxisAlignment:MainAxisAlignment.center, children:[Text('صفحہ ${idx+1}', style:const TextStyle(fontSize:10, color:Colors.grey)), const SizedBox(height:20), const Text('بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ\n\nالْحَمْدُ لِلّٰهِ رَبِّ الْعَالَمِيْنَ\nالرَّحْمٰنِ الرَّحِيْمِ\nمَالِكِ يَوْمِ الدِّيْنِ', style:TextStyle(fontSize:22, height:2), textAlign:TextAlign.center)]))),
               Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: QuranPageBorder()))),
-              // نیچے بٹن
-              Positioned(bottom:0, left:0, right:0, child: Container(height:40, color: Colors.black.withOpacity(0.8), child: Row(mainAxisAlignment:MainAxisAlignment.spaceAround, children:[Icon(Icons.settings, color:Colors.white, size:18), Icon(Icons.bookmark, color:Colors.white, size:18), Text('${idx+1} / 604', style:TextStyle(color:Colors.white, fontSize:12)), Icon(Icons.share, color:Colors.white, size:18)]))),
+              Positioned(bottom:0, left:0, right:0, child: Container(height:40, color: Colors.black.withOpacity(0.8), child: Row(mainAxisAlignment:MainAxisAlignment.spaceAround, children:[const Icon(Icons.settings, color:Colors.white, size:18), const Icon(Icons.bookmark, color:Colors.white, size:18), Text('${idx+1} / 604', style:const TextStyle(color:Colors.white, fontSize:12)), const Icon(Icons.share, color:Colors.white, size:18)]))),
             ],
           );
         },
@@ -251,12 +262,9 @@ class _QuranReaderState extends State<QuranReader> {
 }
 class QuranPageBorder extends CustomPainter {
   @override void paint(Canvas canvas, Size size){
-    var paint=Paint()..color=Color(0xFF0B5D2A)..style=PaintingStyle.stroke..strokeWidth=3;
-    var path=Path();
-    // باہر والا بارڈر
+    var paint=Paint()..color=const Color(0xFF0B5D2A)..style=PaintingStyle.stroke..strokeWidth=3;
     canvas.drawRect(Rect.fromLTWH(4,4,size.width-8,size.height-50), paint);
-    // اندرونی لائن
-    paint.strokeWidth=1; paint.color=Color(0xFFD4AF37);
+    paint.strokeWidth=1; paint.color=const Color(0xFFD4AF37);
     canvas.drawRect(Rect.fromLTWH(12,12,size.width-24,size.height-66), paint);
   }
   @override bool shouldRepaint(covariant CustomPainter old)=>false;
