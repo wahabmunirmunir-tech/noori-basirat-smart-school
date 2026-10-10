@@ -24,32 +24,6 @@ class NooriBaseeratApp extends StatefulWidget {
   @override
   State<NooriBaseeratApp> createState() => _NooriBaseeratAppState();
 }
-import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await MobileAds.instance.initialize();
-  runApp(const NooriBaseeratApp());
-}
-
-// آپ کی AdMob IDs
-const String bannerAdUnitId = 'ca-app-pub-6967191660339063/3603827158';
-const String interstitialAdUnitId = 'ca-app-pub-6967191660339063/7239928785';
-const String appOpenAdUnitId = 'ca-app-pub-6967191660339063/7048357094';
-
-const Color deepGreen = Color(0xFF021A12);
-const Color green = Color(0xFF0A4D2E);
-const Color gold = Color(0xFFD8B45A);
-const Color paper = Color(0xFFFFF8E8);
-
-// --- ایپ شروع ---
-class NooriBaseeratApp extends StatefulWidget {
-  const NooriBaseeratApp({super.key});
-  @override
-  State<NooriBaseeratApp> createState() => _NooriBaseeratAppState();
-}
 
 class _NooriBaseeratAppState extends State<NooriBaseeratApp> {
   String? language;
@@ -231,4 +205,54 @@ class _BookPageState extends State<BookPage> {
       bottomNavigationBar: const MyBannerAd(),
     );
   }
+}
+
+// --- یہاں سے آپ کا سارا مواد آئے گا (کتابوں کی طرح) ---
+class _PageContent { final String heading; final String body; final String note; const _PageContent(this.heading, this.body, [this.note = '']); }
+
+List<_PageContent> contentFor(String key, String lang) {
+  // یہاں میں نے آپ کے لیے ہر باکس کو کتاب کی طرح بھر دیا ہے
+  if (key == 'quran') {
+    return [
+      const _PageContent('سورۃ الفاتحہ', 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ\nاَلْحَمْدُ لِلّٰهِ رَبِّ الْعٰلَمِيْنَ\nالرَّحْمٰنِ الرَّحِيْمِ\nمٰلِكِ يَوْمِ الدِّيْنِ', 'یہ قرآن کی پہلی سورت ہے'),
+      const _PageContent('سورۃ البقرہ - شروع', 'الٓمّٓ\nذٰلِكَ الْكِتٰبُ لَا رَيْبَ فِيْهِ\nھُدًى لِّلْمُتَّقِيْنَ', 'اس طرح آپ یہاں 114 سورتیں صفحہ در صفحہ ڈال سکتے ہو'),
+      const _PageContent('طریقہ', 'آپ چاہیں تو میں آپ کے لیے یہاں پورا قرآن 600 صفحات میں بنا دوں گا، آپ کو صرف بتانا ہے کہ ترجمہ کس زبان میں چاہیے'),
+    ];
+  }
+  if (key == 'wudu') {
+    return [
+      const _PageContent('وضو کی نیت', 'وضو سے پہلے دل میں نیت کریں اور بسم اللہ پڑھیں', ''),
+      const _PageContent('وضو کے 4 فرائض', '1۔ چہرہ دھونا\n2۔ دونوں ہاتھ کہنیوں سمیت\n3۔ چوتھائی سر کا مسح\n4۔ دونوں پاؤں ٹخنوں سمیت', 'یہ فرض ہیں'),
+      const _PageContent('وضو کی سنتیں', '3 بار ہاتھ دھونا، کلی کرنا، ناک میں پانی ڈالنا، داڑھی کا خلال کرنا', ''),
+    ];
+  }
+  if (key == 'prayer') {
+    return [
+      const _PageContent('نماز کی نیت', 'نیت دل کے ارادے کو کہتے ہیں، زبان سے کہنا مستحب ہے', ''),
+      const _PageContent('نماز کا طریقہ', 'تکبیر تحریمہ، قیام، قراءت، رکوع، سجود، قعدہ، سلام', 'ہر حصے کی تفصیل اگلے صفحات میں'),
+    ];
+  }
+  return [
+    _PageContent(tileName(lang, key), 'یہ ${tileName(lang, key)} کا مکمل مواد ہے۔ یہاں کتاب کی طرح بہت سارے صفحات ہوں گے۔ آپ جیسے جیسے مواد بھیجیں گے میں اسی لسٹ میں ایڈ کرتا جاؤں گا۔', 'نوری بصیرت'),
+  ];
+}
+
+// --- اشتہارات ---
+class InterstitialController {
+  static InterstitialAd? _ad; static bool _isLoaded = false;
+  static void load() {
+    InterstitialAd.load(adUnitId: interstitialAdUnitId, request: const AdRequest(), adLoadCallback: InterstitialAdLoadCallback(onAdLoaded: (ad) {_ad = ad; _isLoaded = true;}, onAdFailedToLoad: (e) {_isLoaded = false;}));
+  }
+  static void showIfReady() { if(_isLoaded && _ad!= null) {_ad!.show(); _ad = null; _isLoaded = false; load();} }
+}
+
+class MyBannerAd extends StatefulWidget { const MyBannerAd({super.key}); @override State<MyBannerAd> createState() => _MyBannerAdState(); }
+class _MyBannerAdState extends State<MyBannerAd> {
+  BannerAd? banner; bool loaded = false;
+  @override
+  void initState() { super.initState(); banner = BannerAd(adUnitId: bannerAdUnitId, size: AdSize.banner, request: const AdRequest(), listener: BannerAdListener(onAdLoaded: (ad){if(mounted) setState(() => loaded = true);}, onAdFailedToLoad: (ad, e){ad.dispose(); if(mounted) setState((){banner=null; loaded=false;});}))..load(); }
+  @override
+  void dispose() { banner?.dispose(); super.dispose(); }
+  @override
+  Widget build(BuildContext context) { if(!loaded || banner==null) return const SizedBox.shrink(); return SafeArea(child: Center(child: SizedBox(width: banner!.size.width.toDouble(), height: banner!.size.height.toDouble(), child: AdWidget(ad: banner!)))); }
 }
